@@ -1,13 +1,15 @@
 package com.turtlehoarder.cobblemonchallenge.util;
 
 import com.cobblemon.mod.common.api.battles.model.PokemonBattle;
+import com.cobblemon.mod.common.api.pokemon.stats.Stat;
 import com.cobblemon.mod.common.api.types.ElementalType;
 import com.cobblemon.mod.common.battles.ActiveBattlePokemon;
 import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
+import com.cobblemon.mod.common.pokemon.IVs;
 import com.cobblemon.mod.common.pokemon.Pokemon;
+import com.cobblemon.mod.common.pokemon.PokemonStats;
 import com.cobblemon.mod.common.util.LocalizationUtilsKt;
-import com.turtlehoarder.cobblemonchallenge.CobblemonChallenge;
 import com.turtlehoarder.cobblemonchallenge.battle.ChallengeBattleBuilder;
 import com.turtlehoarder.cobblemonchallenge.battle.ChallengeFormat;
 import com.turtlehoarder.cobblemonchallenge.command.ChallengeCommand;
@@ -19,6 +21,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
+
+import java.util.Map;
 import java.util.UUID;
 
 public class ChallengeUtil {
@@ -87,16 +91,15 @@ public class ChallengeUtil {
     }
 
 
-
     public static ListTag generateLoreTagForPokemon(Pokemon pokemon) {
         ListTag loreTag = new ListTag();
-        Component abilityComponent = Component.literal(String.format(ChatFormatting.GRAY  + "Ability: %s", ChatFormatting.YELLOW + LocalizationUtilsKt.lang(String.format("ability.%s", pokemon.getAbility().getName())).getString()));
+        Component abilityComponent = Component.literal(String.format(ChatFormatting.GRAY + "Ability: %s", ChatFormatting.YELLOW + LocalizationUtilsKt.lang(String.format("ability.%s", pokemon.getAbility().getName())).getString()));
         String natureKey = pokemon.getNature().getName().toLanguageKey();
-        Component natureComponent = Component.literal(String.format(ChatFormatting.GRAY + "Nature: %s", ChatFormatting.YELLOW + LocalizationUtilsKt.lang(String.format("nature.%s",natureKey.substring(natureKey.lastIndexOf('.') + 1))).getString()));
+        Component natureComponent = Component.literal(String.format(ChatFormatting.GRAY + "Nature: %s", ChatFormatting.YELLOW + LocalizationUtilsKt.lang(String.format("nature.%s", natureKey.substring(natureKey.lastIndexOf('.') + 1))).getString()));
         String statSeparator = ChatFormatting.GRAY + " / ";
         Component statsPartOne = Component.literal(String.format(ChatFormatting.RED + "HP: %d" + statSeparator + ChatFormatting.GOLD + "Atk: %d" + statSeparator + ChatFormatting.YELLOW + "Def: %d", pokemon.getHp(), pokemon.getAttack(), pokemon.getDefence()));
         Component statsPartTwo = Component.literal(String.format(ChatFormatting.AQUA + "SpA: %d" + statSeparator + ChatFormatting.GREEN + "SpD: %d" + statSeparator + ChatFormatting.LIGHT_PURPLE + "Spe: %d", pokemon.getSpecialAttack(), pokemon.getSpecialDefence(), pokemon.getSpeed()));
-        Component moveSeperator = Component.literal( "Moves:");
+        Component moveSeperator = Component.literal("Moves:");
         loreTag.add(StringTag.valueOf(Component.Serializer.toJson(abilityComponent)));
         loreTag.add(StringTag.valueOf(Component.Serializer.toJson(natureComponent)));
         loreTag.add(StringTag.valueOf(Component.Serializer.toJson(statsPartOne)));
@@ -124,6 +127,14 @@ public class ChallengeUtil {
         if (format == ChallengeFormat.STANDARD_6V6) {
             pokemon.getEffectedPokemon().setLevel(level);
             pokemon.getEffectedPokemon().heal();
+
+            for (Map.Entry<? extends Stat, ? extends Integer> stat : pokemon.getEffectedPokemon().getIvs()) {
+                if (pokemon.getEffectedPokemon().getPersistentData().contains("bc_" + stat.getKey())) {
+                    int value = pokemon.getEffectedPokemon().getPersistentData().getInt("bc_" + stat.getKey());
+                    pokemon.getEffectedPokemon().getIvs().set(stat.getKey(), value < 0 ? 0 : 31);
+                }
+            }
+
         }
         return pokemon;
     }
