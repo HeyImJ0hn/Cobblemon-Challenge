@@ -126,15 +126,15 @@ public class ChallengeUtil {
     public static BattlePokemon applyFormatTransformations(ChallengeFormat format, BattlePokemon pokemon, int level) {
         if (format == ChallengeFormat.STANDARD_6V6) {
             pokemon.getEffectedPokemon().setLevel(level);
-            pokemon.getEffectedPokemon().heal();
 
             for (Map.Entry<? extends Stat, ? extends Integer> stat : pokemon.getEffectedPokemon().getIvs()) {
-                if (pokemon.getEffectedPokemon().getPersistentData().contains("bc_" + stat.getKey())) {
-                    int value = pokemon.getEffectedPokemon().getPersistentData().getInt("bc_" + stat.getKey());
+                if (pokemon.getEffectedPokemon().getPersistentData().contains("bc_" + stat.getKey().toString().toLowerCase())) {
+                    int value = pokemon.getEffectedPokemon().getPersistentData().getInt("bc_" + stat.getKey().toString().toLowerCase());
                     pokemon.getEffectedPokemon().getIvs().set(stat.getKey(), value < 0 ? 0 : 31);
                 }
             }
 
+            pokemon.getEffectedPokemon().heal();
         }
         return pokemon;
     }
